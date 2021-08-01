@@ -1,6 +1,6 @@
 # Introduction
 
-AAD Pod Identity enables containerized applications in AKS cluster to access services that uses Azure Active Directory (AAD) as an identity provider. It supports assigning following types of identities to pod. 
+AAD Pod Identity (OSS) enables containerized applications in AKS cluster to access services that uses Azure Active Directory (AAD) as an identity provider. It supports assigning following types of identities to pod. 
 
 - `type: 0` - User Assigned Managed Identity
 - `type: 1` - Service Principal with Secret
@@ -40,7 +40,7 @@ export IDENTITY_RESOURCE_GROUP="<IdentityResourceGroup>"
 ./scripts/role-assignment.sh
 ```
 
-# Install AAD Pod Identity
+# Install AAD Pod Identity (OSS)
 
 Deploy `aad-pod-identity` components to an RBAC-enabled cluster using `Helm3`. This will also create `AzureIdentity` and `AzureIdentityBinding` objects which are used to assing a User Assigned Managed Identity (UAMI) as pod identity.
 
