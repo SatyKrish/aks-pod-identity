@@ -174,8 +174,6 @@ Managed Identity Controller will be watching for pods with `aadpodidbinding` lab
 5. Select UAMI, and verify the details.
 6. Copy the value in `Client ID` to be used in following test. 
 
-![AKS Pod Identity Test](./img/aks-pod-identity-test.png)
-
 # Test App with Pod Identity
 
 Run following command from Test pod to generate `jwt` token using the configured Azure Identity. Following command should return a valid `access_token`.
