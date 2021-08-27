@@ -1,10 +1,15 @@
 # Access Blob using Pod Identity
 
-In this example, we will be assigning user assigned identity to a pod which will be used to download a blob from Azure storage.
+In this example, we will be assigning user managed identity to a pod which will download static web content from Azure blob storage. Pod is made of 2 containers.
 
-> Note: This example doesn't use any secrets like 
-`storage_access_key`, so there is no need for secret providers (Kubernetes secrets, Azure key vault, etc).
-- Set environment defaults.
+- **blob-loader** - Init container generates access token using pod identity, downloads blob from Azure storage, and stores it as a file in a volume shared with main container.
+- **nginx** - Main container uses the web content in the shared volume and renders it as a web page.
+
+> Note: This example doesn't use any secrets like `storage_access_key`, so there is no need for secret providers (Kubernetes secrets, Azure key vault, etc).
+
+## Deploy
+
+Set environment defaults.
 
 ```sh
 SUBSCRIPTION_ID=<my-subsscription-id>
@@ -13,7 +18,7 @@ LOCATION=eastus2
 CLUSTER_NAME=<my-aks-cluster>
 ```
 
-- Create a general-purpose storage account and a blob container 
+Create a general-purpose storage account and a blob container 
 
 ```sh
 STORAGE_ACCOUNT=<my-storage>
@@ -28,7 +33,7 @@ az storage container create  \
     --account-name $STORAGE_ACCOUNT
 ```
 
-- Uploade test blob to storage container.
+Uploade test blob to storage container.
 
 ```sh
 BLOB_NAME=index.html
@@ -38,7 +43,7 @@ az storage blob upload \
     --file /blobs/index.html 
 ```
  
-- Create an user assigned identity for retreiving blob from Azure Storage.
+Create an user assigned identity for retreiving blob from Azure Storage.
 
 ```sh
 IDENTITY=<my-blob-identity>
@@ -48,7 +53,7 @@ az identity create \
 PRINCIPAL_ID=$(az identity show --resource-group $RESOURCE_GROUP  --name $IDENTITY --query 'principalId' -o tsv)
 ```
 
-- Assign permission for user assigned identity to access blob container.
+Assign `Storage Blob Data Reader` role to the user assigned identity to access blob.
 
 ```sh
 az role assignment create \
@@ -57,7 +62,7 @@ az role assignment create \
     --scope '/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT'
 ```
 
-- Create pod identity for the cluster using `az aks pod-identity add` command.
+Create pod identity for the cluster using `az aks pod-identity add` command.
 
 ```sh
 az aks pod-identity add --resource-group $RESOURCE_GROUP \
@@ -67,7 +72,7 @@ az aks pod-identity add --resource-group $RESOURCE_GROUP \
     --identity-resource-id '/subscriptions/$SUBSCRIPTION_ID/resourcegroups/$$RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$IDENTITY'
 ```
 
-- Deploy `manifests/nginx-blob-test.yaml` to create a sample app which retrieves a blob from Azure Storage using pod identity.
+Deploy `manifests/nginx-blob-test.yaml` to create a sample app which retrieves a blob from Azure Storage using pod identity.
 
 > Note: This manifest configures pod to use an identity by assigning this label - `aadpodidbinding: blob-identity`
 
@@ -75,13 +80,15 @@ az aks pod-identity add --resource-group $RESOURCE_GROUP \
 kubectl apply -f manifests/nginx-blob-test.yaml
 ```
 
-- Check whether the `nginx-blob-test` app is running.
+Check whether the `nginx-blob-test` app is running.
 
 ```sh
 kubectl get all -n nginx-blob-test
 ```
 
-- Run a test pod to check whether nginx `index.html` blob is downloaded from Azure Storage and returned by `nginx-blob-test` service.
+## Test
+
+Run a test pod to check whether nginx `index.html` blob is downloaded from Azure Storage and returned by `nginx-blob-test` service.
 
 ```sh
 kubectl run -it --rm busybox --image=radial/busyboxplus:curl -n nginx-blob-test -- sh
@@ -120,7 +127,7 @@ kubectl run -it --rm busybox --image=radial/busyboxplus:curl -n nginx-blob-test 
 </html>[ root@busybox:/ ]$ exit
 ```
 
-- Inspect the `nginx-blob-test` pod to check whether `index.html` blob is created as a file in `/usr/share/nginx/html/` path.
+Inspect the `nginx-blob-test` pod to check whether `index.html` blob is created as a file in `/usr/share/nginx/html/` path.
 
 ```sh
 kubectl exec -it -n nginx-blob-test $(kubectl get pods -n nginx-blob-test -l app=nginx-blob-test -o jsonpath='{.items[0].metadata.name}') -- sh
@@ -162,15 +169,15 @@ index.html
 </html>/usr/share/nginx/html # exit
 ```
 
-# Cleanup
+## Cleanup
 
-- Uninstall App 
+Uninstall App 
 
 ```sh
 kubectl delete ns nginx-blob-test
 ```
 
-- Delete resource group
+Delete resource group
 
 ```sh
 az group delete --name $RESOURCE_GROUP
