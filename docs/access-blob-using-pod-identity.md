@@ -2,6 +2,8 @@
 
 In this example, we will be assigning user assigned identity to a pod which will be used to download a blob from Azure storage.
 
+> Note: This example doesn't use any secrets like 
+`storage_access_key`, so there is no need for secret providers (Kubernetes secrets, Azure key vault, etc).
 - Set environment defaults.
 
 ```sh
