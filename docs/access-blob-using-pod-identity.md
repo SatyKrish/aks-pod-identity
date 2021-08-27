@@ -69,6 +69,8 @@ az aks pod-identity add --resource-group $RESOURCE_GROUP \
 
 - Deploy `manifests/nginx-blob-test.yaml` to create a sample app which retrieves a blob from Azure Storage using pod identity.
 
+> Note: This manifest configures pod to use an identity by assigning this label - `aadpodidbinding: blob-identity`
+
 ```sh
 kubectl apply -f manifests/nginx-blob-test.yaml
 ```
