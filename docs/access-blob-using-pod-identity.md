@@ -16,29 +16,41 @@ CLUSTER_NAME=<my-aks-cluster>
 ```sh
 STORAGE_ACCOUNT=<my-storage>
 CONTAINER=<my-container>
-az storage account create --resource-group $RESOURCE_GROUP --name $STORAGE_ACCOUNT --location $LOCATION --encryption-services blob
-az storage container create  --name $CONTAINER --account-name $STORAGE_ACCOUNT
+az storage account create \
+    --resource-group $RESOURCE_GROUP \
+    --name $STORAGE_ACCOUNT \
+    --location $LOCATION \
+    --encryption-services blob
+az storage container create  \
+    --name $CONTAINER \
+    --account-name $STORAGE_ACCOUNT
 ```
 
 - Uploade test blob to storage container.
 
 ```sh
 BLOB_NAME=index.html
-az storage blob upload --container-name $CONTAINER --name $BLOB_NAME --file /blobs/index.html 
+az storage blob upload \
+    --container-name $CONTAINER \
+    --name $BLOB_NAME \
+    --file /blobs/index.html 
 ```
  
 - Create an user assigned identity for retreiving blob from Azure Storage.
 
 ```sh
 IDENTITY=<my-blob-identity>
-az identity create --resource-group $RESOURCE_GROUP --name $IDENTITY
+az identity create \
+    --resource-group $RESOURCE_GROUP \
+    --name $IDENTITY
 PRINCIPAL_ID=$(az identity show --resource-group $RESOURCE_GROUP  --name $IDENTITY --query 'principalId' -o tsv)
 ```
 
 - Assign permission for user assigned identity to access blob container.
 
 ```sh
-az role assignment create --assignee $PRINCIPAL_ID \
+az role assignment create \
+    --assignee $PRINCIPAL_ID \
     --role 'Storage Blob Data Reader' \
     --scope '/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT'
 ```
