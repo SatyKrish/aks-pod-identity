@@ -56,6 +56,7 @@ PRINCIPAL_ID=$(az identity show --resource-group $RESOURCE_GROUP  --name $IDENTI
 
 Assign `Storage Blob Data Reader` role to the user assigned identity to access blob.
 
+> 💡: Role assignment should follow the least privilege required for completing a given operation. 
 ```sh
 STORAGE_ACCOUNT_ID=/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT
 az role assignment create \
