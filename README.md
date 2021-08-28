@@ -101,13 +101,23 @@ az aks create \
 - Verify whether pod identity add-on enabled.
 
 ```sh
-$ az aks show \
+az aks show \
   --resource-group $RESOURCE_GROUP \
   --name $CLUSTER_NAME \
   --query 'podIdentityProfile.enabled'
 The behavior of this command has been altered by the following extension: aks-preview
 true
 ```
+
+- Generate `kubeconfig` to connect to the AKS cluster.
+
+```sh
+az aks get-credentials \
+  --resource-group $RESOURCE_GROUP \
+  --name $CLUSTER_NAME \
+  --admin
+The behavior of this command has been altered by the following extension: aks-preview
+true
 
 ## Scenarios
 

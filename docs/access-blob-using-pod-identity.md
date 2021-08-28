@@ -22,7 +22,7 @@ Create a general-purpose storage account and a blob container
 
 ```sh
 STORAGE_ACCOUNT=<my-storage>
-CONTAINER=<my-container>
+CONTAINER=blob-test
 az storage account create \
     --resource-group $RESOURCE_GROUP \
     --name $STORAGE_ACCOUNT \
@@ -38,9 +38,10 @@ Uploade test blob to storage container.
 ```sh
 BLOB_NAME=index.html
 az storage blob upload \
+    --account-name $STORAGE_ACCOUNT \
     --container-name $CONTAINER \
     --name $BLOB_NAME \
-    --file /blobs/index.html 
+    --file blobs/index.html 
 ```
  
 Create an user assigned identity for retreiving blob from Azure Storage.
@@ -56,23 +57,25 @@ PRINCIPAL_ID=$(az identity show --resource-group $RESOURCE_GROUP  --name $IDENTI
 Assign `Storage Blob Data Reader` role to the user assigned identity to access blob.
 
 ```sh
+STORAGE_ACCOUNT_ID=/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT
 az role assignment create \
     --assignee $PRINCIPAL_ID \
     --role 'Storage Blob Data Reader' \
-    --scope '/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT'
+    --scope $STORAGE_ACCOUNT_ID
 ```
 
 Create pod identity for the cluster using `az aks pod-identity add` command.
 
 ```sh
+IDENTITY_ID=/subscriptions/$SUBSCRIPTION_ID/resourcegroups/$RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$IDENTITY
 az aks pod-identity add --resource-group $RESOURCE_GROUP \
     --cluster-name $CLUSTER_NAME \
     --namespace 'nginx-blob-test'  \
     --name 'blob-identity' \
-    --identity-resource-id '/subscriptions/$SUBSCRIPTION_ID/resourcegroups/$$RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$IDENTITY'
+    --identity-resource-id $IDENTITY_ID
 ```
 
-Deploy `manifests/nginx-blob-test.yaml` to create a sample app which retrieves a blob from Azure Storage using pod identity.
+Deploy `manifests/nginx-blob-test.yaml` to create a sample app which retrieves a blob from Azure Storage using pod identity. Replace `<my-storage-account>` with the Storage Account name used above.
 
 > Note: This manifest configures pod to use an identity by assigning this label - `aadpodidbinding: blob-identity`
 
