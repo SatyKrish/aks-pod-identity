@@ -118,7 +118,7 @@ az aks get-credentials \
   --admin
 The behavior of this command has been altered by the following extension: aks-preview
 true
-
+```
 ## Scenarios
 
-- [Access Blob Storage using Pod Identity](docs/access-blob-using-pod-identity.md)
+- [Access Azure Blob Storage using Pod Identity](docs/access-blob-using-pod-identity.md)
