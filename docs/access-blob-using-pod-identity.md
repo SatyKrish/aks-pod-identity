@@ -55,6 +55,7 @@ PRINCIPAL_ID=$(az identity show --resource-group $RESOURCE_GROUP  --name $IDENTI
 
 Assign `Storage Blob Data Reader` role to the user assigned identity to access blob.
 
+> 💡: Role assignment should follow the least privilege required for completing a given operation. 
 ```sh
 az role assignment create \
     --assignee $PRINCIPAL_ID \
