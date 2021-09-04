@@ -18,11 +18,17 @@ LOCATION=eastus2
 CLUSTER_NAME=<my-aks-cluster>
 ```
 
+Export storage environment vaiables by replacing placeholders with your blob store details. They will be used later while applying kubernetes manifest. 
+
+```sh
+export STORAGE_ACCOUNT=<my-storage-account>
+export CONTAINER=<my-container-name>
+export BLOB=<my-blob-name>
+```
+
 Create a general-purpose storage account and a blob container 
 
 ```sh
-STORAGE_ACCOUNT=<my-storage>
-CONTAINER=blob-test
 az storage account create \
     --resource-group $RESOURCE_GROUP \
     --name $STORAGE_ACCOUNT \
@@ -36,11 +42,10 @@ az storage container create  \
 Upload test blob to storage container.
 
 ```sh
-BLOB_NAME=index.html
 az storage blob upload \
     --account-name $STORAGE_ACCOUNT \
     --container-name $CONTAINER \
-    --name $BLOB_NAME \
+    --name $BLOB \
     --file blobs/index.html 
 ```
  
@@ -57,7 +62,6 @@ PRINCIPAL_ID=$(az identity show --resource-group $RESOURCE_GROUP  --name $IDENTI
 Assign `Storage Blob Data Reader` role to the user assigned identity to access blob.
 
 > 💡 Role assignment should follow the least privilege required for completing a given operation. 
-
 ```sh
 STORAGE_ACCOUNT_ID=/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT
 az role assignment create \
@@ -77,12 +81,14 @@ az aks pod-identity add --resource-group $RESOURCE_GROUP \
     --identity-resource-id $IDENTITY_ID
 ```
 
-Deploy `manifests/nginx-blob-test.yaml` to create a sample app which retrieves a blob from Azure Storage using pod identity. Replace `<my-storage-account>` with the Storage Account name used above.
+Deploy `manifests/nginx-blob-test.yaml` to create a sample app which retrieves a blob from Azure Storage using pod identity. 
 
-> Note: This manifest configures pod to use an identity by assigning this label - `aadpodidbinding: blob-identity`
+`envsubst` command will substitue placeholders in kubernetes manifest with storage environment variables created above.
+
+> Note: This manifest configures pod to use an identity by assigning this label - `aadpodidbinding: blob-identity`.
 
 ```sh
-kubectl apply -f manifests/nginx-blob-test.yaml
+envsubst '${STORAGE_ACCOUNT} ${CONTAINER} ${BLOB}' < manifests/nginx-blob-test.yaml | kubectl apply -f -
 ```
 
 Check whether the `nginx-blob-test` app is running. Wait till `EXTERNAL-IP` for `nginx-blob-test-svc` is generated.
@@ -95,16 +101,16 @@ kubectl get all -n nginx-blob-test
 OUTPUT:
 
 NAME                                   READY   STATUS    RESTARTS   AGE
-pod/nginx-blob-test-679976b84b-pfz6s   1/1     Running   0          26s
+pod/nginx-blob-test-65fdb6c449-gpdlh   1/1     Running   0          49s
 
 NAME                          TYPE           CLUSTER-IP    EXTERNAL-IP      PORT(S)        AGE
-service/nginx-blob-test-svc   LoadBalancer   10.0.251.49   52.138.123.193   80:30941/TCP   27s
+service/nginx-blob-test-svc   LoadBalancer   10.0.251.49   52.138.123.193   80:30941/TCP   8h
 
 NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/nginx-blob-test   1/1     1            1           28s
+deployment.apps/nginx-blob-test   1/1     1            1           8h
 
 NAME                                         DESIRED   CURRENT   READY   AGE
-replicaset.apps/nginx-blob-test-679976b84b   1         1         1       28s
+replicaset.apps/nginx-blob-test-65fdb6c449   1         1         1       50s
 ```
 
 ## Test
@@ -157,7 +163,13 @@ index.html
 
 ## Cleanup
 
-Uninstall App 
+Uninstall `nginx-blob-test` application 
+
+```sh
+kubectl delete -f manifests/nginx-blob-test.yaml
+```
+
+Delete `nginx-blob-test` namespace
 
 ```sh
 kubectl delete ns nginx-blob-test

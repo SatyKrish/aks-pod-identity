@@ -28,16 +28,10 @@ spec:
       initContainers:
       - name: blob-loader
         image: radial/busyboxplus:curl
-        env:
-        - name: STORAGE_ACCOUNT
-          valueFrom:
-            configMapKeyRef:
-              name: nginx-blob-test-config
-              key: storageAccount
         command: ["/bin/sh","-c"]
         args:
-        - access_token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fstorage.azure.com%2F' -H Metadata:true -s | sed -nE 's/.*"access_token":"([^\"]*)",".*/\1/p');
-          curl -s 'https://$(STORAGE_ACCOUNT).blob.core.windows.net/blob-test/index.html' -H "x-ms-version:2017-11-09" -H "Authorization:Bearer ${access_token}" > /data/index.html;
+        - ACCESS_TOKEN=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fstorage.azure.com%2F' -H Metadata:true -s | sed -nE 's/.*"access_token":"([^\"]*)",".*/\1/p');
+          curl -s 'https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER}/${BLOB}' -H "x-ms-version:2017-11-09" -H "Authorization:Bearer ${ACCESS_TOKEN}" > /data/index.html;
         volumeMounts:
         - name: nginx-index
           mountPath: /data          
@@ -72,13 +66,3 @@ spec:
       port: 80
   selector:
     app: nginx-blob-test
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-blob-test-config
-  namespace: nginx-blob-test
-  labels:
-    app: nginx-blob-test
-data:
-  storageAccount: <my-storage-account>
