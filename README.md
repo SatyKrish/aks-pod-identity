@@ -12,7 +12,7 @@ In AKS, following component is deployed to allow pods to use user managed identi
 
 In the following example, we create a pod that uses a user managed identity to request access token. Application can use that token to access any service integrated with Azure Active Directory:
 
-![AKS Pod Identity](docs/img/aks-pod-identities.png)
+![AKS Pod Identity Flow](docs/img/aks-pod-identity-flow.png)
 
 1. Cluster operator first creates identity used by pods to request access to services.
 2. The NMI server relay any pod requests for access tokens to Azure AD.
@@ -105,7 +105,8 @@ az aks show \
   --resource-group $RESOURCE_GROUP \
   --name $CLUSTER_NAME \
   --query 'podIdentityProfile.enabled'
-The behavior of this command has been altered by the following extension: aks-preview
+
+OUTPUT:
 true
 ```
 
@@ -116,8 +117,6 @@ az aks get-credentials \
   --resource-group $RESOURCE_GROUP \
   --name $CLUSTER_NAME \
   --admin
-The behavior of this command has been altered by the following extension: aks-preview
-true
 ```
 ## Scenarios
 

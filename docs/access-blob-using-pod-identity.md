@@ -84,52 +84,33 @@ Deploy `manifests/nginx-blob-test.yaml` to create a sample app which retrieves a
 kubectl apply -f manifests/nginx-blob-test.yaml
 ```
 
-Check whether the `nginx-blob-test` app is running.
+Check whether the `nginx-blob-test` app is running. Wait till `EXTERNAL-IP` for `nginx-blob-test-svc` is generated.
 
 ```sh
 kubectl get all -n nginx-blob-test
 ```
 
+```
+OUTPUT:
+
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/nginx-blob-test-679976b84b-pfz6s   1/1     Running   0          26s
+
+NAME                          TYPE           CLUSTER-IP    EXTERNAL-IP      PORT(S)        AGE
+service/nginx-blob-test-svc   LoadBalancer   10.0.251.49   52.138.123.193   80:30941/TCP   27s
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx-blob-test   1/1     1            1           28s
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-blob-test-679976b84b   1         1         1       28s
+```
+
 ## Test
 
-Run a test pod to check whether nginx `index.html` blob is downloaded from Azure Storage and returned by `nginx-blob-test` service.
+Open the `EXTERNAL_IP` in a browser to display static web content from `nginx-blob-test` service.
 
-```sh
-kubectl run -it --rm busybox --image=radial/busyboxplus:curl -n nginx-blob-test -- sh
-
-[ root@busybox:/ ]$ curl http://nginx-blob-test
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>Welcome to AKS Pod Identity !</title>
-    <style>
-        html {
-            color-scheme: light dark;
-        }
-
-        body {
-            width: 35em;
-            margin: 0 auto;
-            font-family: Tahoma, Verdana, Arial, sans-serif;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>Welcome to AKS Pod Identity !</h1>
-    <p>If you see this page, AKS pod is successfully authenticated to Azure Blob Storage
-        using Pod Identity and downloaded the static content.</p>
-
-    <p>For online documentation and support please refer to
-        <a href="https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity/">docs.microsoft.com</a>.
-    </p>
-
-    <p><em>Thank you for using AKS Pod Identity.</em></p>
-</body>
-
-</html>[ root@busybox:/ ]$ exit
-```
+![AKS Pod Identity Flow](img/aks-pod-identity-test.png)
 
 Inspect the `nginx-blob-test` pod to check whether `index.html` blob is created as a file in `/usr/share/nginx/html/` path.
 
