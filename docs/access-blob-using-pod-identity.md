@@ -33,7 +33,7 @@ az storage container create  \
     --account-name $STORAGE_ACCOUNT
 ```
 
-Uploade test blob to storage container.
+Upload test blob to storage container.
 
 ```sh
 BLOB_NAME=index.html
@@ -44,7 +44,7 @@ az storage blob upload \
     --file blobs/index.html 
 ```
  
-Create an user assigned identity for retreiving blob from Azure Storage.
+Create a user assigned identity for retreiving blob from Azure Storage.
 
 ```sh
 IDENTITY=<my-blob-identity>
@@ -56,7 +56,8 @@ PRINCIPAL_ID=$(az identity show --resource-group $RESOURCE_GROUP  --name $IDENTI
 
 Assign `Storage Blob Data Reader` role to the user assigned identity to access blob.
 
-> 💡: Role assignment should follow the least privilege required for completing a given operation. 
+> 💡 Role assignment should follow the least privilege required for completing a given operation. 
+
 ```sh
 STORAGE_ACCOUNT_ID=/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT
 az role assignment create \
